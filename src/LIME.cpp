@@ -271,10 +271,12 @@ Type objective_function<Type>::operator() ()
   R_t(0) = exp(beta) * exp(Nu_input(0) - pow(sigma_R,2)/Type(2));
 
   //over time by age
-  matrix<Type> N_ta(n_t,n_a); // abundance
+  matrix<Type> N_ta(n_t,n_a); // abundance for fished population
+  matrix<Type> N_ta0(n_t,n_a); // abundance for unfished population
   matrix<Type> SB_ta(n_t,n_a); // spawning biomass
   matrix<Type> TB_ta(n_t,n_a); // total biomass
   N_ta.setZero();
+  N_ta0.setZero();
   SB_ta.setZero();
   TB_ta.setZero();
   SB_ta.setZero();
@@ -289,14 +291,19 @@ Type objective_function<Type>::operator() ()
 
   for(int a=0;a<n_a;a++){
     // Population abundance
+    // Calculate unfished population abundance at age by just removing those affected by
+    // natural mortality
     if(a==0){
       N_ta(0,a) = R_t(0);
+      N_ta0(0,a) = R_t(0);
     }
     if((a>=1) & (a<(n_a-1))){
       N_ta(0,a) = N_ta(0,a-1) * exp(-M - F_ta(0,a-1));
+      N_ta0(0,a) = N_ta0(0,a-1) * exp(-M);
     }
     if(a==(n_a-1)){
       N_ta(0,a) = (N_ta(0,a-1) * exp(-M - F_ta(0,a-1))) / (1 - exp(-M - F_ta(0,a-1)));
+      N_ta0(0,a) = (N_ta0(0,a-1) * exp(-M)) / (1 - exp(-M));
     }
 
     // Spawning biomass
@@ -364,12 +371,15 @@ Type objective_function<Type>::operator() ()
       // Population abundance
       if((t>=1) & (a==0)){
         N_ta(t,a) = R_t(t);
+        N_ta0(t,a) = R_t(t);
       }
       if((t>=1) & (a>=1) & (a<(n_a-1))){
         N_ta(t,a) = N_ta(t-1,a-1) * exp(-M - F_ta(t-1,a-1)); 
+        N_ta0(t,a) = N_ta0(t-1,a-1) * exp(-M);
       }
       if((t>=1) & (a==(n_a-1))){
         N_ta(t,a) = (N_ta(t-1,a-1) * exp(-M - F_ta(t-1,a-1))) + (N_ta(t-1,a) * exp(-M - F_ta(t-1,a)));
+        N_ta0(t,a) = (N_ta0(t-1,a-1) * exp(-M)) + (N_ta0(t-1,a) * exp(-M));
       }
 
       // Spawning biomass
@@ -748,6 +758,7 @@ Type objective_function<Type>::operator() ()
   REPORT( SB0 );
   REPORT(D_t);
   REPORT(N_ta);
+  REPORT(N_ta0);
   REPORT(Cn_ta);
   REPORT(plba);
   REPORT(page);
