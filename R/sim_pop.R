@@ -619,6 +619,7 @@ sim_pop <-
       lh$plba <- plba
       lh$page <- lapply(1:length(page), function(x) page[[x]])
       lh$N_at <- N_at
+      lh$N_at0 <- N_at0
       lh$N_ats <- N_ats
       lh$nlbins <- length(mids)
       if (pool == TRUE) {
