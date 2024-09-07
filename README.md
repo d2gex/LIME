@@ -13,5 +13,9 @@ The length-based integrated mixed effects (LIME) model uses length data and biol
   * **Publication**: Rudd, MB and Thorson, JT. 2017. Accounting for variable recruitment and fishing mortality in length-based stock assessments for data-limited fisheries. Canadian Journal of Fisheries and Aquatic Sciences https://doi.org/10.1139/cjfas-2017-0143.
 
 ### Upgrades:
-This version of LIME modifies the data simulation function and additionally provides the estimated unfished population as N_at0. Such matrix
-is already calculated by LIME, however it was left out of the object that `sim_pop` function returned.
+LIME has been modified to provide estimates of the un-fished population (`N_at0`) from both model estimation (`run_LIME`) and 
+model simulation. These changes directly affect the C++ TMB code for the estimation process and the R sim_pop function for the simulation exercise, which is called by the higher-level 
+`generate_data` function. Please note that **no initial depletion** has been applied.
+
+For the estimation, the un-fished population is calculated using the same abundance function as LIME, but with the fishing 
+mortality term removed, accounting only for depletion due to natural mortality.
