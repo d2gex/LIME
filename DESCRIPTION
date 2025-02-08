@@ -6,10 +6,21 @@ Description: A flexible stock assessment method for fisheries with developing da
 URL: https://github.com/merrillrudd/LIME
 BugReports: https://github.com/merrillrudd/LIME/issues
 License: MIT + file LICENSE
-Imports: dplyr, ggplot2, RColorBrewer, reshape2, TMB, TMBhelper, RcppEigen
+Imports:
+    dplyr,
+    ggplot2,
+    RColorBrewer,
+    reshape2,
+    TMB,
+    TMBhelper,
+    RcppEigen
 LinkingTo: TMB, RcppEigen
 RoxygenNote: 7.1.0
 LazyData: true
-Suggests: testthat, knitr, rmarkdown
-Remotes: kaskr/TMB_contrib_R/TMBhelper
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown
+Remotes:
+    kaskr/TMB_contrib_R/TMBhelper
 VignetteBuilder: knitr
