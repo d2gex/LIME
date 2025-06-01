@@ -283,9 +283,11 @@ Type objective_function<Type>::operator() ()
 
   //over time
   vector<Type> N_t(n_t); // abundance
+  matrix<Type> N_t0(n_fl, n_t);
   vector<Type> SB_t(n_t); //spawning biomass
   vector<Type> TB_t(n_t); //total biomass
   N_t.setZero();
+  N_t0.setZero();
   SB_t.setZero();
   TB_t.setZero();
 
@@ -314,6 +316,9 @@ Type objective_function<Type>::operator() ()
 
     //Annual values
     if(a>0) N_t(0) += N_ta(0,a);
+    for(int f = 0; f < n_fl; f++){
+      N_t0(f, 0) += N_ta0(0, a) * S_fa(f, a);
+    }
     SB_t(0) += SB_ta(0,a);
     TB_t(0) += TB_ta(0,a);
   }
@@ -390,6 +395,9 @@ Type objective_function<Type>::operator() ()
       
       //Annual values
       if(a>0) N_t(t) += N_ta(t,a);
+      for(int f = 0; f < n_fl; f++){
+        N_t0(f, t) += N_ta0(t, a) * S_fa(f, a);
+      }
       SB_t(t) += SB_ta(t,a);
       TB_t(t) += TB_ta(t,a);
     }
@@ -426,31 +434,64 @@ Type objective_function<Type>::operator() ()
     }    
   }
 
+  array<Type> page0(n_t,n_a,n_fl);
+  page0.setZero();
+  for(int f = 0; f < n_fl; f++){
+    for(int t = 0; t < n_t; t++){
+      for(int a = 0; a < n_a; a++){
+        if(N_t0(f, t) > Type(0)){
+          page0(t,a,f) = (N_ta0(t,a) * S_fa(f,a)) / N_t0(f, t);  
+        } else {
+          page0(t,a,f) = Type(0);  
+        }
+      }
+    }
+  }
+
   // probability of sampling given length bin
   matrix<Type> plb_init(n_t,n_lb);
+  matrix<Type> plb0_init(n_t, n_lb);      
   matrix<Type> page_temp(n_t,n_a);
+  matrix<Type> page0_temp(n_t, n_a);      
   matrix<Type> plb_sums(n_fl,n_t);
+  matrix<Type> plb0_sums(n_fl, n_t);      
   array<Type> plb(n_t,n_lb,n_fl);
+  array<Type> plb0(n_t, n_lb, n_fl);      
+
+  plb.setZero();
+  plb0.setZero();
+  plb_init.setZero();
+  plb0_init.setZero();
+  page_temp.setZero();
+  page0_temp.setZero();
+  plb_sums.setZero();
+  plb0_sums.setZero();
+
 
   for(int f=0;f<n_fl;f++){
     //find page for fleet f saved as page_temp
     for(int t=0;t<n_t;t++){
       for(int a=0;a<n_a;a++){
           page_temp(t,a) = page(t,a,f);
+          page0_temp(t, a) = page0(t, a, f);
       }
     }
     //for each fleet f:
     plb_init = page_temp*plba;
+    plb0_init = page0_temp * plba;
     for(int t=0;t<n_t;t++){
       plb_sums(f,t) = 0;
+      plb0_sums(f, t) = Type(0);
       for(int l=0;l<n_lb;l++){
         // if(plb_init(t,l)==0) plb_init(t,l) = 1e-20;
         plb_sums(f,t) += plb_init(t,l) + Type(1e-20);
+        plb0_sums(f, t) += plb0_init(t, l) + Type(1e-20);
       }
     }
     for(int t=0;t<n_t;t++){
       for(int l=0;l<n_lb;l++){
         plb(t,l,f) = plb_init(t,l)/plb_sums(f,t);
+        plb0(t, l, f) = plb0_init(t, l) / plb0_sums(f, t);
       }
     }    
   }
@@ -762,7 +803,9 @@ Type objective_function<Type>::operator() ()
   REPORT(Cn_ta);
   REPORT(plba);
   REPORT(page);
+  REPORT(page0);
   REPORT(plb);
+  REPORT(plb0);
   REPORT(W_a);
   REPORT(L_a);
   REPORT(Mat_a);
